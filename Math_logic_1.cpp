@@ -12,60 +12,60 @@
 #include <stdexcept>
 
 using namespace std;
+typedef unsigned int Uint;//чтобы меньше печатать
 
 class RPNLogicCalculator {
 public:
 	RPNLogicCalculator() :
-		operations{
-			{'+', [](bool a, bool b) {return bool(a | b); } },
-			{'|', [](bool a, bool b) {return bool(a | b); } },
-			{'*', [](bool a, bool b) {return bool(a & b); } },
-			{'&', [](bool a, bool b) {return bool(a & b); } },
-			{'>', [](bool a, bool b) {return bool(!a | b); } },
-			{'=', [](bool a, bool b) {return bool((a & b) | (!a & !b)); } },
-			{'!', [](bool a, bool b) {return bool(!a); } },
-			{'~', [](bool a, bool b) {return bool(!a); } },
+		operations{//инициализация "словаря"
+			{'+', [](bool a, bool b) {return bool(a | b); } },//дизъюнкция
+			{'|', [](bool a, bool b) {return bool(a | b); } },//дизъюнкция
+			{'*', [](bool a, bool b) {return bool(a & b); } },//конъюнкция
+			{'&', [](bool a, bool b) {return bool(a & b); } },//конъюнкция
+			{'>', [](bool a, bool b) {return bool(!a | b); } },//импликация
+			{'=', [](bool a, bool b) {return bool((a & b) | (!a & !b)); } },//эквивалентность
+			{'!', [](bool a, bool b) {return bool(!a); } },//отрицание
+			{'~', [](bool a, bool b) {return bool(!a); } },//отрицание
 	}
 	{}
 	bool calculateRPN(string str) {
-		stack<bool> valStack;
+		stack<bool> valStack;//создаём стек для значений
 
-		auto pop_stack([&]() {
+		auto pop_stack([&]() {// создаём лямбда выражение, чтобы доставать из стека значение одной строкой
 			auto result(valStack.top());
 			valStack.pop();
 			return result;
 		});
-		for (int i{ 0 }; i < str.size(); i++) {
-			if (str[i] == '1' || str[i] == '0') {
+		for (Uint i{ 0 }; i < str.size(); i++) {//цикл по входной строке строке
+			if (str[i] == '1' || str[i] == '0') {//если встретили значение
 				valStack.push(bool(str[i] - '0'));
 			}
-			else {
-				auto & operation(operations.at(str[i]));
+			else {//иначе это оператор
+				auto & operation(operations.at(str[i]));//берём нужную нам функцию
 				bool result;
-				auto right{ pop_stack() };
-				if (str[i] == '!' || str[i] == '~') {
+				auto right{ pop_stack() };//берём правый операнд
+				if (str[i] == '!' || str[i] == '~') {//если это отрицание, то левый операнд не нужен
 					result = operation(right, false);
 				}
 				else {
-					auto left{ pop_stack() };
+					auto left{ pop_stack() };//достаём левый операнд
 					result = operation(left, right);
 				}
-				valStack.push(result);
+				valStack.push(result);//кладём полученный результат обратно в стек
 			}
 		}
-		return valStack.top();
+		return valStack.top();//возвращаем вычисленное значение
 	}
 private:
-	map<char, bool(*)(bool, bool)> operations;
+	map<char, bool(*)(bool, bool)> operations;//"словарь" для удобного вызова операций по символам операторов
 };
 
 
 class AnalyzerToRPN {	 
 public:
-	set<string> variableName;
-
+	set<string> variableName;//множество имён переменных
 	AnalyzerToRPN() :
-		operationsPriority{
+		operationsPriority{//инициализация map, чтобы было удобно определять приоритет операций
 			{'!', 5 },
 			{'~', 5 },
 			{'*', 4},
@@ -77,88 +77,81 @@ public:
 		} 
 	{}
 	string analysingString(string input) {
-		auto pop_stack{ [&](string & str) {
+		auto pop_stack{ [&](string & str) {//функция для записывания верхнего значения в строку
 			auto result{stackForOperations.top()};
 			str += result;
 			stackForOperations.pop();
 		} };
-		string temp;
-		for (unsigned int i{ 0 }; i< input.size(); i++) {
-			//cout << "string " << input[i] <<" "<< isOperations(input[i]) << endl;
-			temp.clear();
-			if (isLetter(input[i])) {
-				temp = getVariableName(input, i);
-			//	std::cout << temp << std::endl;
-				variableName.insert(temp);
-				temp += ' ';
-				output.push(temp);
+		string strToInsert;// строка для записывания значений в очередь
+		for (Uint i{ 0 }; i< input.size(); i++) {// итерируемся по входной строке
+			strToInsert.clear();//очищаем строку от остатков с предыдущей итерации
+			if (isLetter(input[i])) {//если встретили букву, то это начало имени переменной
+				strToInsert = getVariableName(input, i);// достаём имя
+				variableName.insert(strToInsert);// добавляем имя переменной в множество, если такое уже есть, то ничего не произойдёт
+				strToInsert += ' ';//добавляем пробел, чтобы в дальнейшем отличить имена разных переменных для вставки
+				output.push(strToInsert);//добавляем имя переменной в очередь выхода
 				i--;
 			}
-			else if (isConstant(input[i])) {
-				temp += input[i];
-				//cout << "I'm work?" << endl;
-				output.push(temp);
+			else if (isConstant(input[i])) {//если втсретилось константное значение, просто добавляем его в очередь выхода
+				strToInsert += input[i];
+				output.push(strToInsert);
 			}
-			else if(isOperations(input[i])){
-					while (!stackForOperations.empty() && isOperations(stackForOperations.top()) && (operationsPriority.at(input[i]) <= operationsPriority.at(stackForOperations.top()))) {
-						temp.clear();
-						pop_stack(temp);
-						output.push(temp);
+			else if(isOperations(input[i])){//если операция
+					while (!stackForOperations.empty() && isOperations(stackForOperations.top()) //если стек не пуст, и приоритет операции в стеке выше или равен текущей операции
+						&& (operationsPriority.at(input[i]) <= operationsPriority.at(stackForOperations.top()))) {
+						strToInsert.clear();
+						pop_stack(strToInsert);//берём операцию
+						output.push(strToInsert);//добавляем её в очередь на выход
 					}
-					stackForOperations.push(input[i]);
-					//temp.clear();
-					//temp += input[i];
-					//cout << "   " << temp << endl;
-					//output.push(temp);
+					stackForOperations.push(input[i]);//добавляем текущую операцию в стек
 			}
-			else if(isOpeningBracket(input[i])){
+			else if(isOpeningBracket(input[i])){//если открывающая скобка, то добавляем её в стек
 				stackForOperations.push(input[i]);
 			}
-			else if (isClosingBracket(input[i])) {
-				while (!stackForOperations.empty() &&!isOpeningBracket(stackForOperations.top()) ) {
-					temp.clear();
-					pop_stack(temp);
-					output.push(temp);
+			else if (isClosingBracket(input[i])) {//если закрывающая скобка
+				while (!stackForOperations.empty() &&!isOpeningBracket(stackForOperations.top()) ) {//перекладываем операции из стека, пока не нашлась открывающая скобка
+					strToInsert.clear();
+					pop_stack(strToInsert);
+					output.push(strToInsert);
 				}
-				if (!stackForOperations.empty()) {
+				if (!stackForOperations.empty()) {//если стек не пуст, то выкидываем скобку
 					stackForOperations.pop();
 				}
 				else {
+					throw invalid_argument("Opening bracket is absented.\n");
 					//ошибка, не было открывающей скобки
 				}
 
 			}
-			else if (input[i]==' ') {
-				
-				//ничего не делаем
-			}
+			else if (input[i]==' ') {/*если пробел, то ничего не делаем*/}
 			else {
-				//ошибка, был встречен символ, который не является ни именем переменной, ни оператором 
+				throw invalid_argument("Unknown symbol.\n");
+				//ошибка, был встречен символ, который не является ни частью имени переменной, ни оператором 
 			}
 		}
-		while (!stackForOperations.empty()) {
-			temp.clear();
-			pop_stack(temp);
-			if (isOpeningBracket(temp[0])) {
-				//ошибка, есть незакрытые скобки
+		while (!stackForOperations.empty()) {//пока стек не пуст перекладываем все операции из него
+			strToInsert.clear();
+			pop_stack(strToInsert);
+			if (isOpeningBracket(strToInsert[0])) {//если открытая скобка
+				throw invalid_argument("Closing bracket is absented.\n");
+				//ошибка, есть незакрытая(ые) скобка(и)
 			}
-			output.push(temp);
+			output.push(strToInsert);
 		}
-		temp.clear();
-		while (!output.empty()) {
-
-			temp += output.front();
-			//std::cout << temp << endl;
+		strToInsert.clear();
+		while (!output.empty()) {//преваращаем очередь на выход в строку
+			strToInsert += output.front();
 			output.pop();
 		}
-		return temp;
+		return strToInsert;
 	}
-	bool isLetter(char symbol) {
+	bool isLetter(char symbol) {//проверяем является ли буквой английского алфавита
 		return symbol >= 'a'&&symbol <= 'z' || symbol >= 'A'&&symbol <= 'Z';
 	}
 
 	string getVariableName(string input, unsigned int &i) {
 		string name;
+		//итерируемся по строке, пока не встречен пробел или символ операции
 		while (i < input.size() && !isOperations(input[i]) && !isOpeningBracket(input[i]) && !isClosingBracket(input[i]) && input[i] != ' ') {
 			name += input[i];
 			i++;
@@ -172,7 +165,8 @@ private:
 	}
 	bool isOperations(char symbol) {
 		try {
-			operationsPriority.at(symbol);
+			operationsPriority.at(symbol);//проверяем есть ли такая операция
+			//если такой операции нет, то сгенерируется исключение out_of_range
 		}
 		catch (out_of_range & exception) {
 			return false;
@@ -185,26 +179,32 @@ private:
 	bool isClosingBracket(char symbol) {
 		return symbol == ')';
 	}
-	map<char, char> operationsPriority;
+	map<char, char> operationsPriority;//ассоциативный контейнер для операций и их приоритетов
 	queue<string> output;
 	stack<char> stackForOperations;
 };
 class LogicCalculator {
+#define WIDTH 10// компилируемая константа для красивого вывода в виде таблицы
 public:
 	LogicCalculator(){}
 	LogicCalculator(string str) {
-		strWithNames=analyzer.analysingString(str);
-		initMapVariable();
-		makeStrToSubstitution();
-		makeTruthTable();
+		try {
+			strWithNames = analyzer.analysingString(str);//делаем из входной строки строку с ОПН
+		}
+		catch (invalid_argument &ex) {//если ловим исключение, то прерываем исполнение
+			cout << ex.what();
+			throw runtime_error("Calculation is stopped.\n");
+		}
+		initMapVariable();//инициализация контйенера с именами переменных и позициями вставки
+		makeStrToSubstitution();//создаём строку для вставки значений
+		makeTruthTable();//считаем и выводимтаблицу истинности
 	}
 
 private:
 	void makeStrToSubstitution() {
-		unsigned int writer{ 0 };
-		for (unsigned int i{ 0 }; i < strWithNames.size(); i++) {
+		Uint writer{ 0 };
+		for (Uint i{ 0 }; i < strWithNames.size(); i++) {
 			if (analyzer.isLetter(strWithNames[i])) {
-				//unsigned int j{ i };
 				string name = analyzer.getVariableName(strWithNames, i);
 				variable[name].push_back(writer);
 				strToSubstitution += ' ';
@@ -214,86 +214,69 @@ private:
 			}
 			writer++;
 		}
-		/*cout << strToSubstitution << endl;
-		for (auto obj : variable) {
-			cout << obj.first << endl;
-			for (auto x : obj.second) {
-				cout <<"   "<< x << endl;
-			}
-		}*/
 	}
 	void makeTruthTable() {
-		printHorizontalLine();
+		printHorizontalLine();//вывод шапки таблицы
 		printNames();
-		cout << setw(10) << "Result" << " |" << endl;
+		cout << setw(WIDTH) << "Result" << " |" << endl;
 		printHorizontalLine();
-		unsigned int max = 1 << variable.size();
-		for (unsigned int binaryVector{ 0 }; binaryVector < max; binaryVector++) {
-			unsigned int mask = variable.size()-1;
+		Uint max = 1 << variable.size();//находим значение, до которого будет идти перебор
+		for (Uint binaryVector{ 0 }; binaryVector < max; binaryVector++) {//перебираем
+			Uint variableNumber = variable.size()-1;//так как эелементы в map отсортированы, то начинаем с самой левой переменной
 			for (auto obj : variable) {
-				unsigned int value = (binaryVector >>mask ) & 1;
-				cout << setw(10) << value<<" |";
-				for (auto valuePos : obj.second) {
+				Uint value = (binaryVector >>variableNumber ) & 1;//извлекаем значение дял текущей переменной
+				cout << setw(WIDTH) << value<<" |";//выводим часть строки с выражениями
+				for (auto valuePos : obj.second) {//вставляем в строку для подсчёта
 					strToSubstitution[valuePos] = '0' + value;
 				}
-				mask--;
+				variableNumber--;
 			}
-			cout << setw(10) << calculator.calculateRPN(strToSubstitution)<<" |" << endl;
+			//выводим результат 
+			cout << setw(WIDTH) << calculator.calculateRPN(strToSubstitution)<<" |" << endl;
 		}
-		printHorizontalLine();
+		printHorizontalLine();//заканчиваем таблицу
 	}
 	void initMapVariable() {
-		//printHorizontalLine();
-		for (auto obj : analyzer.variableName) {
-			//std::pair<string, vector<int>>
-			variable.insert(std::pair<string, vector<int>>(obj, vector<int>()));
-			//cout << setw(10) << obj<<" |";
-		}
-		//cout << setw(10) <<"Result"<<" |"<<endl;
-		//printHorizontalLine();
+		for (auto obj : analyzer.variableName) {//переводим из множества имён в контейнер, где так же есть позиции
+			variable.insert(std::pair<string, vector<Uint>>(obj, vector<Uint>()));
+		}		
 	}
-	void printNames() {
+	void printNames() {//вывод всех имён переменных
 		for (auto obj :variable) {
-			cout << setw(10) << obj.first << " |";
+			cout << setw(WIDTH) << obj.first << " |";
 		}
 	}
-	void printHorizontalLine() {
-		for (int i{ 0 }; i <= variable.size(); i++) {
-			for (int j{ 0 }; j <= 11; j++) {
-				cout << "-";
+	void printHorizontalLine() {//вывод горизонтальной линии
+		for (Uint i{ 0 }; i <= variable.size(); i++) {
+			for (Uint j{ 0 }; j <= WIDTH+1; j++) {
+				printf("-");
 			}
 		}
 		cout << endl;
 	}
-	AnalyzerToRPN analyzer;
-	RPNLogicCalculator calculator;
-	string strToSubstitution;
-	string strWithNames;
-	map <string, vector <int>> variable;
+	AnalyzerToRPN analyzer;//создаём объект для создания ОПН
+	RPNLogicCalculator calculator;//создаём объект для подсчёта значений выражений
+	string strToSubstitution;//строка, в которую будут вставлятся значения
+	string strWithNames;//строка для запоминания ОПН
+	map <string, vector <Uint>> variable;//контейнер для имёен переменных с массивами позиций, куда будет производится вставка значений
+#undef WIDTH
 };
-
+void insturction() {
+	printf("Instruction\n ! (~) - negation;\n & (*) - conjunction;\n + (|) - disjunction;\n > - material implication;\n = -equivalence;\n");
+}
 int main()
 {
+	insturction();
+	cout << "Enter logic expression:\n";
 	string input;
 	getline(cin, input);
-	//cin.get(input);
-	//1&X1+X2*X3>X4*X1+(X1&X2)*0
-	//AnalyzerToRPN test;
-	//string t{ "(A+B)*B" };
-	//std::cout << test.analysingString(t) << std::endl;
-	LogicCalculator calculator(input);
-	//string test{ "1!0+!1&!" };
-
-	//std::cout << calculateRPN(test.analysingString(t));
+	try {
+		LogicCalculator calculator(input);
+	}
+	catch (runtime_error & error) {
+		cout << error.what();
+		return 1;
+	}
+	return 0;
 }
 
-// Запуск программы: CTRL+F5 или меню "Отладка" > "Запуск без отладки"
-// Отладка программы: F5 или меню "Отладка" > "Запустить отладку"
-
-// Советы по началу работы 
-//   1. В окне обозревателя решений можно добавлять файлы и управлять ими.
-//   2. В окне Team Explorer можно подключиться к системе управления версиями.
-//   3. В окне "Выходные данные" можно просматривать выходные данные сборки и другие сообщения.
-//   4. В окне "Список ошибок" можно просматривать ошибки.
-//   5. Последовательно выберите пункты меню "Проект" > "Добавить новый элемент", чтобы создать файлы кода, или "Проект" > "Добавить существующий элемент", чтобы добавить в проект существующие файлы кода.
-//   6. Чтобы снова открыть этот проект позже, выберите пункты меню "Файл" > "Открыть" > "Проект" и выберите SLN-файл.
