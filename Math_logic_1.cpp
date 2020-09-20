@@ -199,8 +199,64 @@ public:
 		makeStrToSubstitution();//создаём строку для вставки значений
 		makeTruthTable();//считаем и выводимтаблицу истинности
 	}
-
+	void makeTask(string str){
+		try {
+			strWithNames = analyzer.analysingString(str);//делаем из входной строки строку с ОПН
+		}
+		catch (invalid_argument &ex) {//если ловим исключение, то прерываем исполнение
+			cout << ex.what();
+			throw runtime_error("Calculation is stopped.\n");
+		}
+		initMapVariable();//инициализация контйенера с именами переменных и позициями вставки
+		makeStrToSubstitution();//создаём строку для вставки значений
+		task();
+	}
+	//x1 & !x2 + x3 & x4
 private:
+	void task() {
+		printHorizontalLine();//вывод шапки таблицы
+		printNames();
+		cout << setw(WIDTH) << "Result" << " |" << endl;
+		printHorizontalLine();
+		char flag = 0;//переменная, которая будет хранить флаги для определения общезначима, выполнима или невыполнима формула
+		Uint max = 1 << variable.size();//находим значение, до которого будет идти перебор
+		for (Uint binaryVector{ 0 }; binaryVector < max; binaryVector++) {//перебираем
+
+			Uint variableNumber = variable.size() - 1;//так как эелементы в map отсортированы, то начинаем с самой левой переменной
+			for (auto obj : variable) {
+				Uint value = (binaryVector >> variableNumber) & 1;//извлекаем значение для текущей переменной
+				for (auto valuePos : obj.second) {//вставляем в строку для подсчёта
+					strToSubstitution[valuePos] = '0' + value;
+				}
+				variableNumber--;
+			}
+			bool result = calculator.calculateRPN(strToSubstitution);
+			//выводим строку, если значение функции равно истине
+			if (result) {
+				for (int i = variable.size() - 1; i >= 0;i--) {
+					cout << setw(WIDTH) << ((binaryVector >> i) & 1) << " |";
+				}
+				cout << setw(WIDTH) << result << " |" << endl;
+				flag |= 1;//ставим флаг, что встретилось истинное значение
+			}
+			else {
+				flag |= 2;//ставим флаг, что встретилось ложное значение
+			}
+		}
+		printHorizontalLine();//заканчиваем таблицу
+
+		if (flag & 2 ) {//анализируем флаги
+			if (flag & 1) {
+				cout << "Formula is satisfiable." << endl;
+			}
+			else {
+				cout << "Formula is impracticable." << endl;
+			}
+		}
+		else {
+			cout << "Formula is tautology." << endl;
+		}
+	}
 	void makeStrToSubstitution() {
 		Uint writer{ 0 };
 		for (Uint i{ 0 }; i < strWithNames.size(); i++) {
@@ -224,7 +280,7 @@ private:
 		for (Uint binaryVector{ 0 }; binaryVector < max; binaryVector++) {//перебираем
 			Uint variableNumber = variable.size()-1;//так как эелементы в map отсортированы, то начинаем с самой левой переменной
 			for (auto obj : variable) {
-				Uint value = (binaryVector >>variableNumber ) & 1;//извлекаем значение дял текущей переменной
+				Uint value = (binaryVector >>variableNumber ) & 1;//извлекаем значение для текущей переменной
 				cout << setw(WIDTH) << value<<" |";//выводим часть строки с выражениями
 				for (auto valuePos : obj.second) {//вставляем в строку для подсчёта
 					strToSubstitution[valuePos] = '0' + value;
@@ -262,7 +318,7 @@ private:
 #undef WIDTH
 };
 void insturction() {
-	printf("Instruction\n ! (~) - negation;\n & (*) - conjunction;\n + (|) - disjunction;\n > - material implication;\n = -equivalence;\n");
+	printf("Instruction\n ! (~) - negation;\n & (*) - conjunction;\n + (|) - disjunction;\n > - material implication;\n = - equivalence;\n");
 }
 int main()
 {
@@ -270,8 +326,9 @@ int main()
 	cout << "Enter logic expression:\n";
 	string input;
 	getline(cin, input);
+	LogicCalculator calculator;
 	try {
-		LogicCalculator calculator(input);
+		calculator.makeTask(input);
 	}
 	catch (runtime_error & error) {
 		cout << error.what();
