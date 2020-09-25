@@ -48,7 +48,7 @@ public:
 					result = operation(right, false);
 				}
 				else {
-					if (valStack.size() <= 1) {
+					if (valStack.size() ==0) {
 						throw invalid_argument("Invalid input.\n");
 					}
 					auto left{ pop_stack() };//достаём левый операнд
@@ -344,7 +344,7 @@ void test() {
 }
 int main()
 {
-	//test();
+	test();
 	insturction();
 	cout << "Enter logic expression:\n";
 	string input;
