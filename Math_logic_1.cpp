@@ -48,12 +48,16 @@ public:
 					result = operation(right, false);
 				}
 				else {
+					if (valStack.size() <= 1) {
+						throw invalid_argument("Invalid input.\n");
+					}
 					auto left{ pop_stack() };//достаём левый операнд
 					result = operation(left, right);
 				}
 				valStack.push(result);//кладём полученный результат обратно в стек
 			}
 		}
+		
 		return valStack.top();//возвращаем вычисленное значение
 	}
 private:
@@ -288,7 +292,13 @@ private:
 				variableNumber--;
 			}
 			//выводим результат 
-			cout << setw(WIDTH) << calculator.calculateRPN(strToSubstitution)<<" |" << endl;
+			try {
+				cout << setw(WIDTH) << calculator.calculateRPN(strToSubstitution) << " |" << endl;
+			}
+			catch (invalid_argument & ex) {
+				cout<<ex.what();
+				return;
+			}
 		}
 		printHorizontalLine();//заканчиваем таблицу
 	}
@@ -320,8 +330,21 @@ private:
 void insturction() {
 	printf("Instruction\n ! (~) - negation;\n & (*) - conjunction;\n + (|) - disjunction;\n > - material implication;\n = - equivalence;\n");
 }
+void test() {
+	insturction();
+	cout << "Enter logic expression:\n";
+	string input;
+	getline(cin, input);
+	try {
+		LogicCalculator calculator(input);
+	}
+	catch (runtime_error & error) {
+		cout << error.what();
+	}
+}
 int main()
 {
+	//test();
 	insturction();
 	cout << "Enter logic expression:\n";
 	string input;
@@ -332,8 +355,10 @@ int main()
 	}
 	catch (runtime_error & error) {
 		cout << error.what();
+		getchar();
 		return 1;
 	}
+	getchar();
 	return 0;
 }
 

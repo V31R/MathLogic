@@ -1,4 +1,4 @@
 ﻿  Math_logic_1.cpp
-f:\visual studio\programs\math_logic_1\math_logic_1\math_logic_1.cpp(168): warning C4834: отмена возвращаемого значения функции с атрибутом "nodiscard"
-f:\visual studio\programs\math_logic_1\math_logic_1\math_logic_1.cpp(171): warning C4101: exception: неиспользованная локальная переменная
+f:\visual studio\programs\math_logic_1\math_logic_1\math_logic_1.cpp(172): warning C4834: отмена возвращаемого значения функции с атрибутом "nodiscard"
+f:\visual studio\programs\math_logic_1\math_logic_1\math_logic_1.cpp(175): warning C4101: exception: неиспользованная локальная переменная
   Math_logic_1.vcxproj -> F:\Visual studio\Programs\Math_logic_1\Debug\Math_logic_1.exe
