@@ -1,0 +1,6 @@
+﻿  MathLogic2.cpp
+f:\visual studio\programs\mathlogic2\mathlogic2\calculator.h(179): warning C4101: exception: неиспользованная локальная переменная
+f:\visual studio\programs\mathlogic2\mathlogic2\mathlogic2.cpp(42): warning C4018: <: несоответствие типов со знаком и без знака
+f:\visual studio\programs\mathlogic2\mathlogic2\mathlogic2.cpp(63): warning C4018: <: несоответствие типов со знаком и без знака
+f:\visual studio\programs\mathlogic2\mathlogic2\mathlogic2.cpp(85): warning C4018: <: несоответствие типов со знаком и без знака
+  MathLogic2.vcxproj -> F:\Visual studio\Programs\MathLogic2\Debug\MathLogic2.exe
