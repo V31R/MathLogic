@@ -1,0 +1,13 @@
+﻿  Math_logic_3.cpp
+f:\visual studio\programs\math_logic_3\math_logic_3\calculator.h(179): warning C4101: exception: неиспользованная локальная переменная
+f:\visual studio\programs\math_logic_3\math_logic_3\math_logic_3.cpp(52): warning C4018: <: несоответствие типов со знаком и без знака
+f:\visual studio\programs\math_logic_3\math_logic_3\math_logic_3.cpp(53): warning C4018: <: несоответствие типов со знаком и без знака
+f:\visual studio\programs\math_logic_3\math_logic_3\math_logic_3.cpp(81): warning C4018: <: несоответствие типов со знаком и без знака
+f:\visual studio\programs\math_logic_3\math_logic_3\math_logic_3.cpp(82): warning C4018: <: несоответствие типов со знаком и без знака
+f:\visual studio\programs\math_logic_3\math_logic_3\math_logic_3.cpp(85): warning C4018: <: несоответствие типов со знаком и без знака
+f:\visual studio\programs\math_logic_3\math_logic_3\math_logic_3.cpp(95): warning C4018: <: несоответствие типов со знаком и без знака
+f:\visual studio\programs\math_logic_3\math_logic_3\math_logic_3.cpp(123): warning C4018: <: несоответствие типов со знаком и без знака
+f:\visual studio\programs\math_logic_3\math_logic_3\math_logic_3.cpp(168): warning C4018: <: несоответствие типов со знаком и без знака
+f:\visual studio\programs\math_logic_3\math_logic_3\math_logic_3.cpp(190): warning C4018: <: несоответствие типов со знаком и без знака
+f:\visual studio\programs\math_logic_3\math_logic_3\math_logic_3.cpp(192): warning C4018: <: несоответствие типов со знаком и без знака
+  Math_logic_3.vcxproj -> F:\Visual studio\Programs\Math_logic_3\Debug\Math_logic_3.exe
