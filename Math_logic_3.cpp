@@ -6,12 +6,12 @@
 #include "calculator.h"
 typedef signed char Letter;
 typedef vector<Letter> Disjunct;
-class PDNF {
+class PСNF {
 public:
 	set<string> variableNames;
-	vector<Uint> disjuncts;//массив для хранения СДНФ
+	vector<Uint> disjuncts;//массив для хранения СKНФ
 	vector<bool> truthTableValues;//массив со значениями таблицы истинности
-	PDNF() {
+	PСNF() {
 		disjuncts.resize(0);
 	}
 	void getTruthTableFromExpression(string & expr) {//считаем значения таблицы истинности для полученного выражения
@@ -26,8 +26,8 @@ public:
 	}
 	void make() {//из значений таблицы истинности получаем сднф
 		for (Uint binaryVector{ 0 }; binaryVector < truthTableValues.size(); binaryVector++) {
-			if (truthTableValues[binaryVector]) {
-				disjuncts.push_back(binaryVector);
+			if (!truthTableValues[binaryVector]) {
+				disjuncts.push_back(~binaryVector);
 			}
 		}
 	}
@@ -35,10 +35,10 @@ public:
 class Resolution {//класс для нахождения всех формул, для которых одна формула является следствием
 public:
 	Resolution() {
-		PDNFs.resize(0);
+		PCNFs.resize(0);
 	}
 	void clear() {
-		PDNFs.clear();
+		PCNFs.clear();
 		variableNames.clear();
 		disjunctSet.clear();
 	}
@@ -49,19 +49,19 @@ public:
 	}
 	void makeStartDisjunctSet() {
 		makeNameSet();
-		for (int i{ 0 }; i < PDNFs.size(); i++) {//итерируемся по всем сднф
-			for (int j{ 0 }; j < PDNFs[i].disjuncts.size(); j++) {//итерируемся по дизъюнктам внутри сднф
+		for (int i{ 0 }; i < PCNFs.size(); i++) {//итерируемся по всем скнф
+			for (int j{ 0 }; j < PCNFs[i].disjuncts.size(); j++) {//итерируемся по дизъюнктам внутри скнф
 				Disjunct temp;
 				temp.resize(variableNames.size());
 				int pos{ 0 };
 				for (auto name : variableNames) {
-					if (PDNFs[i].variableNames.find(name) != PDNFs[i].variableNames.end()) {//если такая переменная есть 
-						Uint curPos{ PDNFs[i].variableNames.size()};
-						for (auto vName : PDNFs[i].variableNames) {//ищем значение переменной
+					if (PCNFs[i].variableNames.find(name) != PCNFs[i].variableNames.end()) {//если такая переменная есть 
+						Uint curPos{ PCNFs[i].variableNames.size()};
+						for (auto vName : PCNFs[i].variableNames) {//ищем значение переменной
 							curPos--;
 							
 							if (vName == name) {
-								temp[pos] = ((PDNFs[i].disjuncts[j] >> curPos) & 1) > 0?1:-1;
+								temp[pos] = ((PCNFs[i].disjuncts[j] >> curPos) & 1) > 0?1:-1;
 								break;
 							}
 						}
@@ -76,7 +76,7 @@ public:
 		}
 	}
 	void startResolution() {
-		cout << "Set of clauses: " << endl;
+		cout << "Set of disjuncts: " << endl;
 		printDisjuncts();
 		for (int i{ 0 }; i < disjunctSet.size(); i++) {
 			for (int j{ 0 }; j < disjunctSet.size(); j++) {
@@ -120,8 +120,8 @@ public:
 	}
 private:
 	void makeNameSet() {
-		for (int i{ 0 }; i < PDNFs.size(); i++) {
-			for (auto name : PDNFs[i].variableNames) {
+		for (int i{ 0 }; i < PCNFs.size(); i++) {
+			for (auto name : PCNFs[i].variableNames) {
 				variableNames.insert(name);
 			}
 		}
@@ -131,16 +131,16 @@ private:
 		string input;
 		getline(cin, input);
 		input = "!(" + input + ")";
-		PDNF temp{};
+		PСNF temp{};
 		try {
-			temp.getTruthTableFromExpression(input);//сразу же делаем сднф и обрабатываем ошибки ввода
+			temp.getTruthTableFromExpression(input);//сразу же делаем скнф и обрабатываем ошибки ввода
 		}
 		catch (runtime_error & ex) {
 			throw ex;
 		}
 		temp.make();
 		temp.truthTableValues.clear();
-		PDNFs.push_back(temp);
+		PCNFs.push_back(temp);
 	}
 	void getPremises() {//ввод всех посылок
 		cout << "Enter premisions, to stop input enter \\" << endl;
@@ -148,16 +148,16 @@ private:
 		do {
 			getline(cin, input);
 			if (input != string{ "\\" }) {
-				PDNF temp{};
+				PСNF temp{};
 				try {
-					temp.getTruthTableFromExpression(input);//сразу же делаем сднф и обрабатываем ошибки ввода
+					temp.getTruthTableFromExpression(input);//сразу же делаем скнф и обрабатываем ошибки ввода
 				}
 				catch (runtime_error & ex) {
 					throw ex;
 				}
 				temp.make();
 				temp.truthTableValues.clear();
-				PDNFs.push_back(temp);
+				PCNFs.push_back(temp);
 			}
 		} while (input != string{ "\\" });
 	}
@@ -202,7 +202,7 @@ private:
 		for (auto name : variableNames) {
 			if (d[pos]) {
 				if (pos>=1&&flag) {
-					cout << "&";
+					cout << "+";
 				}
 				if (d[pos] == -1) {
 					cout << "!";
@@ -216,7 +216,7 @@ private:
 	}
 
 	set<string> variableNames;//множество имён переменных
-	vector<PDNF> PDNFs;//массив всех совершенных дизъюнктивных нормальных форм
+	vector<PСNF> PCNFs;//массив всех совершенных конъюктивных нормальных форм
 	vector <Disjunct> disjunctSet;//множество дизъюнктов
 };
 int main()
